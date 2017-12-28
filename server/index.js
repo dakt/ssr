@@ -1,6 +1,5 @@
 import path from 'path';
 import Koa from 'koa';
-import Router from 'koa-router';
 import KoaStatic from 'koa-static';
 import React from 'react';
 import ReactDOMServer from 'react-dom/server';
@@ -14,7 +13,6 @@ import rootReducer from '../shared/redux/rootReducer';
 
 
 const server = new Koa();
-const router = new Router();
 
 function render(Component, preloadedState) {
     const html = ReactDOMServer.renderToString(Component);
@@ -38,29 +36,26 @@ function render(Component, preloadedState) {
 }
 
 
-router.get('/', async function(ctx, next) {
-    let preloadedState = { name: 'SERVER_SYNC_NAME' };
-    const store = createStore(rootReducer, preloadedState, applyMiddleware(ReduxThunk));
-
-    await store.dispatch(async function(dispatch, getState) {
-        const data = await Promise.resolve('ASYNC_NAME');
-        store.dispatch({ type: 'CHANGE_NAME', payload: data });
-    });
-
-    preloadedState = store.getState();
-
-    ctx.body = render(
-        <Provider store={store}>
-            <Root />
-        </Provider>,
-        preloadedState
-    );
-});
-
 server
-    .use(router.routes())
     .use(KoaStatic(path.resolve('build')))
-    .use(router.allowedMethods());
+    .use(async function(ctx, next) {
+        let preloadedState = { name: 'SERVER_SYNC_NAME' };
+        const store = createStore(rootReducer, preloadedState, applyMiddleware(ReduxThunk));
+
+        await store.dispatch(async function(dispatch, getState) {
+            const data = await Promise.resolve('ASYNC_NAME');
+            store.dispatch({ type: 'CHANGE_NAME', payload: data });
+        });
+
+        preloadedState = store.getState();
+
+        ctx.body = render(
+            <Provider store={store}>
+                <Root />
+            </Provider>,
+            preloadedState
+        );
+    });
 
 
 function startServer({ port = 3000 }) {

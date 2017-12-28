@@ -35,10 +35,10 @@ function render(Component, preloadedState) {
 </html>`);
 }
 
-
 server
     .use(KoaStatic(path.resolve('build')))
     .use(async function(ctx, next) {
+        console.log('URL', ctx.url);
         let preloadedState = { name: 'SERVER_SYNC_NAME' };
         const store = createStore(rootReducer, preloadedState, applyMiddleware(ReduxThunk));
 
@@ -59,7 +59,7 @@ server
 
 
 function startServer({ port = 3000 }) {
-    console.info('Server is launched on http://%s:%s', 'localhost', port);
+    console.info('[ 🚀 ] Server is launched on http://%s:%s', 'localhost', port);
     server.listen(port);
 }
 

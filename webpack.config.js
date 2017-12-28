@@ -1,4 +1,8 @@
+const webpack = require('webpack');
+const StartServerPlugin = require('start-server-webpack-plugin');
+
 const clientConfig = {
+    target: 'web',
     entry: __dirname + '/client/index.js',
     output: {
         filename: 'build/client.js',
@@ -17,7 +21,14 @@ const clientConfig = {
                 }
             }
         ]
-    }
+    },
+    plugins: [
+        // Ignore watch on files that are produced by the
+        // compilation and might cause compilation loops
+        new webpack.WatchIgnorePlugin([
+
+        ]),
+    ]
 };
 
 const serverConfig = {
@@ -39,10 +50,17 @@ const serverConfig = {
                 }
             }
         ]
-    }
+    },
+    plugins: [
+        new StartServerPlugin({
+            name: 'build/server.js',
+        }),
+        new webpack.WatchIgnorePlugin([
+
+        ]),
+    ]
 }
 
-module.exports = [
-    clientConfig,
-    serverConfig
-];
+module.exports = (platform) => {
+    return platform === 'web' ? clientConfig : serverConfig;
+}

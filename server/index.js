@@ -9,6 +9,10 @@ import {  Provider } from 'react-redux';
 import ReduxThunk from 'redux-thunk';
 import { matchPath } from 'react-router'
 import 'isomorphic-fetch';
+// Looks like babel's object-rest-spread plugin is using generator
+// runtime polyfill and is not relying that generators 
+// functions are implemented in node enviroment
+import "babel-polyfill";
 
 import Root from '../shared/Root';
 import rootReducer from '../shared/redux/rootReducer';
@@ -43,25 +47,27 @@ server
     .use(async (ctx, next) => {
         const { path, method } = ctx;
 
+        // Log request URL
         console.log(chalk.green(method), path);
 
-        let preloadedState = { name: 'SERVER_SYNC_NAME' };
-        const store = createStore(rootReducer, preloadedState, applyMiddleware(ReduxThunk));
+        // Configure store
+        const store = createStore(rootReducer, {}, applyMiddleware(ReduxThunk));
 
+        // Match route so that we can extract component to render
         const RouteMeta = Routes.reduce((acc, nextRoute) => {
             const matchedRoute = matchPath(path, nextRoute);
             return matchedRoute ? Object.assign({}, matchedRoute, nextRoute) : acc;
         }, null);
 
+        if (RouteMeta === null) {
+            // TODO: 404
+        }
+
+        // Try and call component exposed static method and push context to it like store, etc.
         const Component = RouteMeta.component;
         Component.getInitialProps && await Component.getInitialProps({ store });
 
-        await store.dispatch(async function(dispatch, getState) {
-            const data = await Promise.resolve('ASYNC_NAME');
-            store.dispatch({ type: 'CHANGE_NAME', payload: data });
-        });
-
-        preloadedState = store.getState();
+        const preloadedState = store.getState();
 
         ctx.body = render(
             <Provider store={store}>

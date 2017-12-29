@@ -1,29 +1,44 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import Root from '../shared/Root';
-import { createStore } from 'redux';
+import { createStore, applyMiddleware, compose } from 'redux';
 import { Provider } from 'react-redux';
-import  { BrowserRouter as Router, BrowserRouter, Route, Switch } from 'react-router-dom';
+import ReduxThunk from 'redux-thunk';
+import  { 
+    BrowserRouter as Router,
+    BrowserRouter,
+    Route,
+    Switch
+} from 'react-router-dom';
+import "babel-polyfill";
 
 import Routes from '../shared/Routes';
 import rootReducer from '../shared/redux/rootReducer';
 
 
-const store = createStore(rootReducer, window.__INIT_REDUX_STATE___);
+const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
+
+const store = createStore(
+    rootReducer,
+    window.__INIT_REDUX_STATE___ || {},
+    composeEnhancers(
+        applyMiddleware(ReduxThunk)
+    )
+);
 
 ReactDOM.hydrate(
     <Provider store={store}>
         <Router>
             <Switch>
                 {Routes.map(route => {
-
-                    const Component = route.component;
+                    const { path, exact, component } = route;
+                    const Component = component;
 
                     return (
                         <Route
-                            key={route.path}
-                            path={route.path}
-                            exact={route.exact}
+                            key={path}
+                            path={path}
+                            exact={exact}
                             component={Component}
                         />
                     );

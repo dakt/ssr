@@ -1,3 +1,12 @@
+const presets = [
+    'react',
+    'env',
+];
+
+const plugins = [
+    'transform-object-rest-spread',
+];
+
 const clientConfig = {
     entry: __dirname + '/client/index.js',
     output: {
@@ -11,9 +20,7 @@ const clientConfig = {
                 exclude: __dirname + '/node_modules',
                 use: {
                     loader: 'babel-loader',
-                    options: {
-                        presets: ['react']
-                    }
+                    options: { presets, plugins }
                 }
             }
         ]
@@ -33,9 +40,7 @@ const serverConfig = {
                 exclude: __dirname + '/node_modules',
                 use: {
                     loader: 'babel-loader',
-                    options: {
-                        presets: ['react']
-                    }
+                    options: { presets, plugins }
                 }
             }
         ]

@@ -6,6 +6,6 @@ export default connect(
     (state) => ({name: state.name})
 )(
     ({ name }) => (
-        <h1>Hello {name}</h1>
+        <h1>Hello {name} !!!</h1>
     )
-)
+);

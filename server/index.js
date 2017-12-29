@@ -1,4 +1,5 @@
 import path from 'path';
+import chalk from 'chalk';
 import Koa from 'koa';
 import KoaStatic from 'koa-static';
 import React from 'react';
@@ -6,10 +7,12 @@ import ReactDOMServer from 'react-dom/server';
 import { createStore, applyMiddleware } from 'redux';
 import {  Provider } from 'react-redux';
 import ReduxThunk from 'redux-thunk';
+import { matchPath } from 'react-router'
 import 'isomorphic-fetch';
 
 import Root from '../shared/Root';
 import rootReducer from '../shared/redux/rootReducer';
+import Routes from '../shared/Routes';
 
 
 const server = new Koa();
@@ -35,12 +38,23 @@ function render(Component, preloadedState) {
 </html>`);
 }
 
-
 server
     .use(KoaStatic(path.resolve('build')))
-    .use(async function(ctx, next) {
+    .use(async (ctx, next) => {
+        const { path, method } = ctx;
+
+        console.log(chalk.green(method), path);
+
         let preloadedState = { name: 'SERVER_SYNC_NAME' };
         const store = createStore(rootReducer, preloadedState, applyMiddleware(ReduxThunk));
+
+        const RouteMeta = Routes.reduce((acc, nextRoute) => {
+            const matchedRoute = matchPath(path, nextRoute);
+            return matchedRoute ? Object.assign({}, matchedRoute, nextRoute) : acc;
+        }, null);
+
+        const Component = RouteMeta.component;
+        Component.getInitialProps && await Component.getInitialProps({ store });
 
         await store.dispatch(async function(dispatch, getState) {
             const data = await Promise.resolve('ASYNC_NAME');
@@ -51,12 +65,11 @@ server
 
         ctx.body = render(
             <Provider store={store}>
-                <Root />
+                <Component />
             </Provider>,
             preloadedState
         );
     });
-
 
 function startServer({ port = 3000 }) {
     console.info('Server is launched on http://%s:%s', 'localhost', port);

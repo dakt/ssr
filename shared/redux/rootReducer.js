@@ -4,7 +4,7 @@ import { createReducer } from 'redux-act'
 import * as AC from './actions';
 
 
-export default createReducer(
+const users = createReducer(
     {
 
         [AC.getUserRequest]: (state) => ({
@@ -25,5 +25,12 @@ export default createReducer(
         loading: false,
         data: [],
         error: null,
+        page: 1,
+        pageSize: 10,
+        filters: {},
     }
 );
+
+export default combineReducers({
+    users,
+});

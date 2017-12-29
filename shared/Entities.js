@@ -7,7 +7,7 @@ import { disbatch } from 'redux-act';
 
 const Entities = connect(
     (state) => ({
-        data: state.data,
+        data: state.users.data,
     })
 )(
     ({ data }) => (
